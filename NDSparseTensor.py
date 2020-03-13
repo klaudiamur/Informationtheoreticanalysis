@@ -120,6 +120,45 @@ class NDSparseTensor:
     s = self.__repr__()+'\n  '
     return s+'\n  '.join([str(x) for x in self.elements.items()])
 
+  def __mul__(self, other):
+    if isinstance(other, int) or isinstance(other, float):
+      for key, value in self.getnonzero():
+        self.elements[key] *= other
+      return self
+    elif isinstance(other, NDSparseTensor):
+      new = NDSparseTensor(shape=self.shape)
+      for key, value in self.getnonzero():
+        new[key] = self[key] * other[key]
+      return new
+    else:
+      raise TypeError
+
+  def __truediv__(self, other):
+    if isinstance(other, int) or isinstance(other, float):
+      for key, value in self.getnonzero():
+        self.elements[key] /= other
+      return self
+    elif isinstance(other, NDSparseTensor):
+      new = NDSparseTensor(shape=self.shape)
+      for key, value in self.getnonzero():
+        if not other[key] == 0:
+          new[key] = self[key] / other[key]
+        else:
+          raise ZeroDivisionError
+      return new
+    else:
+      raise TypeError
+
+  def sum(self):
+    return sum(self.elements.values())
+
+  def normalize(self):
+    self / self.sum()
+    return self
+
+  def isempty(self):
+    return len(self.getnonzero()) == 0
+
   def getnonzero(self):
     return self.elements.items()
 
@@ -182,3 +221,22 @@ if __name__ == "__main__":
 
   print('Extract row:', matrix2[1, :].todense()) # Extract row
   print('Extract column:', matrix2[:, 1].todense()) # Extract column
+
+  print(matrix)
+  print(matrix / 2)
+  print(matrix.sum())
+  print(matrix.normalize())
+  print(matrix.isempty())
+  matrix.elements = {}
+  print(matrix.isempty())
+  
+  matrix[1, 0] = 10
+  # print(matrix.normalize())
+  print(matrix2)
+  print(matrix2.normalize())
+
+  # print('Division\n', matrix / matrix2)
+
+  # print(matrix2)
+  # print(matrix2.update(np.log2))
+
